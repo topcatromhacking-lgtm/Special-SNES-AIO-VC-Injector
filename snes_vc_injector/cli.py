@@ -1,27 +1,40 @@
-"""Read-only SNES ROM and encrypted Wii U WUP donor inspection CLI."""
+"""Read-only SNES ROM, Wii U encrypted WUP, and decrypted Wii U RPX inspection."""
 from __future__ import annotations
 import argparse
 import json
 import sys
 from .analyzer import RomAnalysisError, analyze_rom
 from .donor import DonorInspectionError, inspect_wup_zip
+from .wiiu_rpx import RpxInspectionError, inspect_wiiu_rpx
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description='Inspect SNES ROMs or encrypted Wii U WUP donor ZIPs')
-    parser.add_argument('input', help='SNES .sfc/.smc file or Wii U donor ZIP')
-    parser.add_argument('--donor', action='store_true', help='Inspect Wii U WUP/NUS donor metadata instead of a ROM')
+    parser = argparse.ArgumentParser(description='Inspect SNES ROM and Wii U VC metadata')
+    parser.add_argument('input', help='ROM file, encrypted WUP donor ZIP, RPX, or decrypted donor ZIP')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--donor', action='store_true', help='Inspect encrypted Wii U WUP/NUS ZIP metadata')
+    mode.add_argument('--rpx', action='store_true', help='Inspect local Wii U SNES RPX or decrypted donor ZIP')
     parser.add_argument('--json', action='store_true', help='Output a JSON report')
     args = parser.parse_args(argv)
     try:
-        if args.donor:
+        if args.rpx:
+            info = inspect_wiiu_rpx(args.input)
+        elif args.donor:
             info = inspect_wup_zip(args.input)
         else:
             info = analyze_rom(args.input)
-    except (RomAnalysisError, DonorInspectionError) as exc:
+    except (RomAnalysisError, DonorInspectionError, RpxInspectionError) as exc:
         print(f'Error: {exc}', file=sys.stderr)
         return 2
     if args.json:
         print(json.dumps(info.as_dict(), indent=2, ensure_ascii=False))
+    elif args.rpx:
+        print(f'VC title: {info.title_code}; Embedded ROM: {info.internal_title}')
+        print(f'Mapping: {info.mapping}; ROM bytes: {info.rom_size}')
+        print(f'Compressed RPX size: {info.rpx_size}; Data section: {info.section_index}')
+        print(f'ROM position in uncompressed data: 0x{info.rom_offset:X}')
+        print(f'Additional data: 0x{info.extra_data_offset:X} ({info.extra_data_bytes} bytes)')
+        for note in info.notes:
+            print(f'Note: {note}')
     elif args.donor:
         print(f'Title ID: {info.title_id}\nTitle version: {info.title_version}')
         print(f'Content files: {info.contents_count}; metadata consistent: {info.metadata_consistent}')
