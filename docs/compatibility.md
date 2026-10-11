@@ -1,10 +1,10 @@
 # Compatibility verification matrix
 
-**Unverified until evidence is documented.** A valid package does not establish successful boot, graphics, audio, SRAM, restore points, or hardware support.
+**Structural output is NOT demonstrated hardware compatibility.** No profile is designated working until successful boot, gameplay, graphics, audio, SRAM and VC restore tests.
 
 | ROM family | Wii SNES VC | Wii U SNES VC | New 3DS SNES VC |
 |---|---|---|---|
-| Standard LoROM | Not tested | Not tested | Not tested |
+| Standard LoROM | Not tested | Experimental Super Mario World / Super Metroid donor build prepared; boot UNTESTED | Not tested |
 | Standard HiROM | Not tested | Not tested | Not tested |
 | ExHiROM (expanded DQIII) | Not tested | Not tested | Not tested |
 | S-DD1 (Street Fighter Alpha 2) | Not tested | Not tested | Not tested |
